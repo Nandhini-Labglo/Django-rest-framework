@@ -37,6 +37,8 @@ urlpatterns = [
     path('user/', views.UserList.as_view()),
     path('user/<int:pk>/', views.UserDetail.as_view()),
 
+    #path('users-list/', views.UserLists.as_view()),
+
     path('snippetslist/', views.SnippetList.as_view()),
     path('snippetslist/<int:pk>/', views.SnippetDetail.as_view()),
     path('snippetslist/<int:pk>/highlight/', views.SnippetHighlight.as_view()),
@@ -57,5 +59,7 @@ urlpatterns = [
     path('parser/', ExampleViews.as_view()),
     path('render/', UserCountView.as_view()),
     path('static-html-render/',views.simple_html_view),
+
+    #path('filter/', views.CustomSearchFilter),
 ]
 

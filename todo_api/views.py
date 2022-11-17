@@ -14,6 +14,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework import renderers
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User,Group
 from django.contrib.auth import authenticate
 from .models import Todo,Snippets,Product,Brand
@@ -244,9 +246,16 @@ class SnippetDetail(mixins.RetrieveModelMixin,
         return self.destroy(request, *args, **kwargs)
 
 class UserList(generics.ListAPIView):
-    renderer_classes = [AdminRenderer]
+    #renderer_classes = [AdminRenderer]
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['username', 'email']
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=username', '=email']
+    filter_backends = [filters.OrderingFilter]
+    #ordering_fields = '__all__'
+    ordering = ['username']
 
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
@@ -320,6 +329,8 @@ class UserCountView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request, format=None):
+        if self.request.GET == self.request.query_params:
+            print('hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii')
         user_count = User.objects.filter(is_active=True).count()
         content = {'user_count': user_count}
         return Response(content)
@@ -329,3 +340,27 @@ class UserCountView(APIView):
 def simple_html_view(request):
     data = '<html><body><h1>Hello, world</h1></body></html>'
     return Response(data)
+
+'''
+class CustomSearchFilter(filters.SearchFilter):
+
+    def get_search_fields(self, view, request):
+        if request.query_params.get('username'):
+            return ['username']
+        return super().get_search_fields(view, request)
+
+class UserLists(generics.ListAPIView, CustomSearchFilter):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        
+        queryset = User.objects.all()
+        username = self.request.query_params.get('username')
+        print(username)
+        if username is not None:
+            print('hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii')
+            queryset = queryset.filter(username=username)
+            print(queryset)
+        return queryset
+'''
