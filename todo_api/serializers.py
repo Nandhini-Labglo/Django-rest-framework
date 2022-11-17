@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from todo_api.models import Snippets, LANGUAGE_CHOICES, STYLE_CHOICES
 from django.contrib.auth.models import User, Group
@@ -23,20 +22,15 @@ class TodoSerializer(serializers.ModelSerializer):
         model = Todo
         fields = ["task", "completed", "timestamp", "updated", "user"]
 
-class BrandSerializer(serializers.ModelSerializer):
+class BrandSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Brand
         fields = ['url','brand_name','brand_logo',]
 
-class ProductSerializer(serializers.
-
-
-ModelSerializer):
+class ProductSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Product
         fields = ['url','id','title','image','price','in_stock','brand']
-
-
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=300, required=True)

@@ -1,28 +1,21 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse, Http404
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
+from rest_framework.decorators import api_view,renderer_classes
+from rest_framework.parsers import FormParser
+from rest_framework.renderers import JSONRenderer,StaticHTMLRenderer,AdminRenderer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import routers, serializers, viewsets
+from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import generics
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication,TokenAuthentication
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework import permissions
-from rest_framework import views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.reverse import reverse
 from rest_framework import renderers
 from django.contrib.auth.models import User,Group
-from django.contrib.auth import login
 from django.contrib.auth import authenticate
-from django.core.exceptions import ImproperlyConfigured
 from .models import Todo,Snippets,Product,Brand
 from .serializers import TodoSerializer,SnippetSerializer,RegisterSerializer,ProductSerializer,BrandSerializer,LoginSerializer,UserSerializer,GroupSerializer
 
@@ -90,7 +83,7 @@ class TodoListApiView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-    
+        print(request.method)
         serializer = TodoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -109,7 +102,7 @@ class TodoDetailApiView(APIView):
             return None
     
     def get(self, request, todo_id, *args, **kwargs):
-        
+        print(request.method)
         todo_instance = self.get_object(todo_id, request.user.id)
         if not todo_instance:
             return Response(
@@ -121,7 +114,7 @@ class TodoDetailApiView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, todo_id, *args, **kwargs):
-        
+        print(request.method)
         todo_instance = self.get_object(todo_id, request.user.id)
         if not todo_instance:
             return Response(
@@ -147,10 +140,6 @@ class TodoDetailApiView(APIView):
             {"res": "Object deleted!"},
             status=status.HTTP_200_OK
         )
-'''
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer'''
 
 class SnippetViewSet(viewsets.ModelViewSet):
     queryset = Snippets.objects.all()
@@ -183,8 +172,6 @@ class RegisterUserupdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 
-
-'''
 @api_view(['GET', 'POST'])
 def snippet_list(request):
     
@@ -195,6 +182,8 @@ def snippet_list(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        
+        print(request.stream)
         serializer = SnippetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -203,9 +192,7 @@ def snippet_list(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def snippet_detail(request, pk):
-    """
-    Retrieve, update or delete a code snippet.
-    """
+    
     try:
         snippet = Snippets.objects.get(pk=pk)
     except Snippets.DoesNotExist:
@@ -216,6 +203,8 @@ def snippet_detail(request, pk):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
+
+        print(request.stream)
         serializer = SnippetSerializer(snippet, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -252,9 +241,10 @@ class SnippetDetail(mixins.RetrieveModelMixin,
         return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)'''
+        return self.destroy(request, *args, **kwargs)
 
 class UserList(generics.ListAPIView):
+    renderer_classes = [AdminRenderer]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -275,13 +265,13 @@ class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,]
 
 
-
+'''
 @api_view(['GET'])
 def api_root(request, format=None):
     return Response({
         'users': reverse('user-list', request=request, format=format),
         'snippets': reverse('snippet-list', request=request, format=format)
-    })
+    })'''
 
 class SnippetHighlight(generics.GenericAPIView):
     queryset = Snippets.objects.all()
@@ -290,6 +280,10 @@ class SnippetHighlight(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         snippet = self.get_object()
         print(snippet)
+        print(request.method)
+        print(request.META)
+        print(request.session)
+        print(request.stream)
         return Response(snippet.highlighted)
 
 class ProductList(generics.ListCreateAPIView):
@@ -312,11 +306,26 @@ class BrandDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BrandSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,]
 
-class ExampleView(APIView):
-    """
-    A view that can accept POST requests with JSON content.
-    """
-    parser_classes = [JSONParser]
+class ExampleViews(APIView):
+    
+    queryset = User.objects.all()
+    parser_classes = [FormParser]
+    serializer_class = UserSerializer
 
     def post(self, request, format=None):
         return Response({'received data': request.data})
+
+class UserCountView(APIView):
+    
+    renderer_classes = [JSONRenderer]
+
+    def get(self, request, format=None):
+        user_count = User.objects.filter(is_active=True).count()
+        content = {'user_count': user_count}
+        return Response(content)
+
+@api_view(['GET'])
+@renderer_classes([StaticHTMLRenderer])
+def simple_html_view(request):
+    data = '<html><body><h1>Hello, world</h1></body></html>'
+    return Response(data)
