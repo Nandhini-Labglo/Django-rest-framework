@@ -52,6 +52,8 @@ urlpatterns = [
     path('Productlist/<int:pk>/', views.ProductDetail.as_view()),
     path('Brandlist/', views.BrandList.as_view()),
     path('Brandlist/<int:pk>/', views.BrandDetail.as_view()),
+
+    path('parser/', ExampleView.as_view()),
 ]
 
 urlpatterns += (router.urls)

@@ -311,3 +311,12 @@ class BrandDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,]
+
+class ExampleView(APIView):
+    """
+    A view that can accept POST requests with JSON content.
+    """
+    parser_classes = [JSONParser]
+
+    def post(self, request, format=None):
+        return Response({'received data': request.data})
