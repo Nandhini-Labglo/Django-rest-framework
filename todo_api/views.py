@@ -91,12 +91,7 @@ class TodoListApiView(APIView):
 
     def post(self, request, *args, **kwargs):
     
-        data = {
-            'task': request.data.get('task'), 
-            'completed': request.data.get('completed'), 
-            'user': request.user.id
-        }
-        serializer = TodoSerializer(data=data)
+        serializer = TodoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -133,12 +128,7 @@ class TodoDetailApiView(APIView):
                 {"res": "Object with todo id does not exists"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        data = {
-            'task': request.data.get('task'), 
-            'completed': request.data.get('completed'), 
-            'user': request.user.id
-        }
-        serializer = TodoSerializer(todo_instance, data=data, partial = True)
+        serializer = TodoSerializer(todo_instance, data=request.data, partial = True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
